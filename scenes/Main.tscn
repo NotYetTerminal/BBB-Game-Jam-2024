@@ -1,0 +1,73 @@
+[gd_scene load_steps=17 format=3 uid="uid://wsxrbsbbsvsj"]
+
+[ext_resource type="Script" path="res://scripts/Game_Loop.gd" id="1_j7vjs"]
+[ext_resource type="PackedScene" uid="uid://dsi5616hcjdh5" path="res://scenes/Player.tscn" id="2_58ysq"]
+[ext_resource type="PackedScene" uid="uid://d301habj1ujig" path="res://scenes/UI/UI.tscn" id="3_kgd5u"]
+[ext_resource type="Script" path="res://scripts/Environment/Walls.gd" id="4_hnuqb"]
+[ext_resource type="Texture2D" uid="uid://8xsm3jcmoce" path="res://assets/stonebrickfloor.png" id="5_x2hxo"]
+[ext_resource type="Script" path="res://scripts/AudioStreamPlayer.gd" id="9_7r74r"]
+[ext_resource type="Texture2D" uid="uid://wk7b18gp24ma" path="res://assets/stonebrickfloor_displacement.png" id="9_iu1v6"]
+[ext_resource type="Script" path="res://scripts/Enemy_Turn.gd" id="9_jff1q"]
+[ext_resource type="Script" path="res://scripts/Environment/Floor.gd" id="9_rpc1u"]
+[ext_resource type="AudioStream" uid="uid://crwm4w13p1j30" path="res://assets/sounds1.wav" id="10_jyvmx"]
+[ext_resource type="AudioStream" uid="uid://c8ft6e8hfcnvj" path="res://assets/sounds2.wav" id="11_g0y0t"]
+[ext_resource type="AudioStream" uid="uid://tcqew0qgjwo0" path="res://assets/sounds3.wav" id="12_m2vrv"]
+[ext_resource type="AudioStream" uid="uid://dnl2mu8uhqo7a" path="res://assets/sounds4.wav" id="13_vl7dl"]
+[ext_resource type="AudioStream" uid="uid://cr4s5bkq62775" path="res://assets/sounds5.wav" id="14_4axm8"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_em84r"]
+albedo_texture = ExtResource("5_x2hxo")
+metallic_specular = 0.0
+emission_enabled = true
+emission_energy_multiplier = 0.1
+emission_texture = ExtResource("5_x2hxo")
+heightmap_enabled = true
+heightmap_deep_parallax = true
+heightmap_min_layers = 8
+heightmap_max_layers = 32
+heightmap_texture = ExtResource("9_iu1v6")
+uv1_scale = Vector3(25, 25, 25)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_hikpt"]
+size = Vector2(25, 25)
+
+[node name="Main" type="Node3D" node_paths=PackedStringArray("player", "enemy_turn")]
+script = ExtResource("1_j7vjs")
+player = NodePath("Player")
+enemy_turn = NodePath("Enemies")
+
+[node name="Player" parent="." instance=ExtResource("2_58ysq")]
+
+[node name="UI" parent="." instance=ExtResource("3_kgd5u")]
+
+[node name="Walls" type="Node3D" parent="."]
+script = ExtResource("4_hnuqb")
+
+[node name="Enemies" type="Node3D" parent="."]
+script = ExtResource("9_jff1q")
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0174351, 0.0404975, -0.00386429)
+material_override = SubResource("StandardMaterial3D_em84r")
+mesh = SubResource("PlaneMesh_hikpt")
+skeleton = NodePath("")
+script = ExtResource("9_rpc1u")
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+script = ExtResource("9_7r74r")
+sounds = Array[AudioStreamWAV]([ExtResource("10_jyvmx"), ExtResource("11_g0y0t"), ExtResource("12_m2vrv"), ExtResource("13_vl7dl"), ExtResource("14_4axm8")])
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 0.5
+autostart = true
+
+[connection signal="spawn_player" from="." to="Player" method="spawn_player"]
+[connection signal="spawn_player" from="." to="UI" method="_on_main_spawn_player"]
+[connection signal="done_moving" from="Player" to="UI" method="_on_player_player_moved"]
+[connection signal="done_moving" from="Player" to="Enemies" method="_on_player_done_moving"]
+[connection signal="done_moving" from="Player" to="Floor" method="_on_player_done_moving"]
+[connection signal="start_boss" from="Player" to="Walls" method="_on_player_start_boss"]
+[connection signal="enemy_moved" from="Enemies" to="UI" method="_on_enemies_enemy_moved"]
+[connection signal="player_hit" from="Enemies" to="Player" method="_on_enemies_player_hit"]
+[connection signal="player_hit" from="Enemies" to="UI" method="_on_enemies_player_hit"]
+[connection signal="timeout" from="Timer" to="AudioStreamPlayer" method="_on_timer_timeout"]
